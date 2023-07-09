@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import CommonLogo from '../assets/undraw_adventure_4hum 1.svg'
 
 import './Quiz.css'
+import Results from '../results/Results';
 const Quiz = ({ questions }) => {
 
 
@@ -15,6 +16,8 @@ const Quiz = ({ questions }) => {
 
     const [currentQuestion, setCurrentQuestion] = useState(1);
     const [questionare, setQuestionare] = useState([]);
+    const [results, setResults] = useState(0);
+    const [isDisabled, setIsDisabled] = useState(true);
 
     const fetchQuestionToDisplay = async () => {
 
@@ -71,7 +74,7 @@ const Quiz = ({ questions }) => {
             // console.log(uniqueFalseValues, "uniqueFalseValues")
             const falseValue = Array.from(uniqueFalseValues).sort(() => Math.random() - 0.5).slice(0, 3);
 
-            const multipleChoice = [...falseValue, correctValue]
+            const multipleChoice = [...falseValue, correctValue].sort(() => Math.random() - 0.5)
 
             options.push({
                 countryName: question["name"],
@@ -79,7 +82,8 @@ const Quiz = ({ questions }) => {
                 question: question[randomGenre],
                 correctAnswer: correctValue,
                 multipleChoice: multipleChoice,
-                selectedChoice: null
+                selectedChoice: [null, null],
+                correctChoice: null,
             });
         });
 
@@ -87,32 +91,60 @@ const Quiz = ({ questions }) => {
     };
 
 
-    const handleCheck = (selection, correctAnswer) => {
+    const handleCheck = (selection, index) => {
         //TODO: continent,  Europe ['Europe']
+        //TODO: capital Port of Spain ['Lilongwe']
+
         //TODO: currencies Pound sterling {NZD: {…}}
         //TODO: language undefined {lav: 'Latvian'}
-        //TODO: capital Port of Spain ['Lilongwe']
         //TODO: flags Israel {common: 'Israel', official: 'State of Israel', nativeName: {…}}
+        let correctAnswer = questionare[currentQuestion - 1].correctAnswer
 
         if (Array.isArray(selection)) {
+            const correctValueIndex = questionare[currentQuestion - 1]?.multipleChoice.indexOf(correctAnswer)
 
             if (JSON.stringify(selection) === JSON.stringify(correctAnswer)) {
                 const updatedQuestionare = [...questionare];
-                updatedQuestionare[currentQuestion - 1].selectedChoice = true;
+                updatedQuestionare[currentQuestion - 1].selectedChoice = [index, true];
+
+                // updatedQuestionare[currentQuestion - 1].correctChoice = correctValueIndex;
                 setQuestionare(updatedQuestionare);
+                setIsDisabled(false)
+                setResults(prev => prev + 1)
+
             } else {
                 const updatedQuestionare = [...questionare];
-                updatedQuestionare[currentQuestion - 1].selectedChoice = false;
+                updatedQuestionare[currentQuestion - 1].selectedChoice = [index, false];
+                updatedQuestionare[currentQuestion - 1].correctChoice = correctValueIndex;
                 setQuestionare(updatedQuestionare);
+                setIsDisabled(false)
+            }
+        } else {
+
+            const correctValueIndex = questionare[currentQuestion - 1]?.multipleChoice.indexOf(correctAnswer)
+
+            if (JSON.stringify(selection) === JSON.stringify(correctAnswer)) {
+                const updatedQuestionare = [...questionare];
+                updatedQuestionare[currentQuestion - 1].selectedChoice = [index, true];
+                setResults(prev => prev + 1)
+                // updatedQuestionare[currentQuestion - 1].correctChoice = correctValueIndex;
+                setQuestionare(updatedQuestionare);
+                setIsDisabled(false)
+            } else {
+                const updatedQuestionare = [...questionare];
+                updatedQuestionare[currentQuestion - 1].selectedChoice = [index, false];
+                updatedQuestionare[currentQuestion - 1].correctChoice = correctValueIndex;
+                setQuestionare(updatedQuestionare);
+                setIsDisabled(false)
             }
         }
 
-        // console.log(selection, correctAnswer, "hello")
 
     }
 
     const handleUpdateQuestion = () => {
         setCurrentQuestion(prev => prev + 1)
+        setIsDisabled(true)
         // multipleChoice = []
     }
 
@@ -131,76 +163,104 @@ const Quiz = ({ questions }) => {
     }, [questionare])
 
     return (
-        <div className='quiz'>
+        currentQuestion < (questionare?.length + 1)
+            ?
+            (<div className='quiz'>
 
-            <header>
-                <div> Country Quiz</div>
-                <div className="adventure_logo">
-                    <img src={CommonLogo} alt="default traveller pic" />
-                </div>
-            </header>
+                <header>
+                    <div> Country Quiz</div>
+                    <div className="adventure_logo">
+                        <img src={CommonLogo} alt="default traveller pic" />
+                    </div>
+                </header>
 
-            {questionare[currentQuestion - 1]?.genre === "flags" &&
+                {questionare[currentQuestion - 1]?.genre === "flags" &&
 
-                <div className="flag">
-                    <img src={questionare[currentQuestion - 1].question.png} alt={questionare[currentQuestion - 1].question.alt} />
-                </div>
-            }
-
-
-
-            <div className='question'>
-                {currentQuestion + ". "}
-                {[questionare[currentQuestion - 1]][0]?.genre === "flags"
-                    ? questionSentences[questionare[currentQuestion - 1]?.genre]
-                    : [questionare[currentQuestion - 1]][0]?.genre === "continents"
-                        ? ([questionare[currentQuestion - 1]?.countryName.common] + " " + questionSentences[questionare[currentQuestion - 1]?.genre])
-                        : (questionSentences[questionare[currentQuestion - 1]?.genre] + " " + [questionare[currentQuestion - 1]?.countryName.common])
+                    <div className="flag">
+                        <img src={questionare[currentQuestion - 1].question.png} alt={questionare[currentQuestion - 1].question.alt} />
+                    </div>
                 }
 
-            </div>
 
-            <ul >
-                {questionare[currentQuestion - 1]?.multipleChoice?.map((choice, index) => {
 
-                    if (Array.isArray(choice)) {
+                <div className='question'>
+                    {currentQuestion + ". "}
+                    {[questionare[currentQuestion - 1]][0]?.genre === "flags"
+                        ? questionSentences[questionare[currentQuestion - 1]?.genre]
+                        : [questionare[currentQuestion - 1]][0]?.genre === "continents"
+                            ? ([questionare[currentQuestion - 1]?.countryName.common] + " " + questionSentences[questionare[currentQuestion - 1]?.genre])
+                            : (questionSentences[questionare[currentQuestion - 1]?.genre] + " " + [questionare[currentQuestion - 1]?.countryName.common])
+                    }
 
-                        return <li
-                            className={`choice ${questionare[currentQuestion - 1]?.selectedChoice === true ? "correct" : ""
-                                } ${questionare[currentQuestion - 1]?.selectedChoice === false ? "wrong" : ""
-                                }`}
-                            onClick={() => handleCheck(choice, questionare[currentQuestion - 1].correctAnswer)}
-                            key={`${choice}-${index}`}>
-                            {choice[0]}
-                        </li>
+                </div>
 
-                    } else if (questionare[currentQuestion - 1].genre === "languages") {
-                        const keys = Object.keys(choice);
-                        return <li
-                            onClick={() => handleCheck(choice[keys[0]].name, questionare[currentQuestion - 1].correctAnswer)}
-                            key={`${choice}-${index}`}>{choice[keys[0]] || choice[keys[0]].name}</li>
+                <ul >
+                    {questionare[currentQuestion - 1]?.multipleChoice?.map((choice, index) => {
 
-                    } else if (questionare[currentQuestion - 1].genre === "currencies") {
-                        const keys = Object.keys(choice);
-                        return <li
-                            onClick={() => handleCheck(choice[keys[0]].name, questionare[currentQuestion - 1].correctAnswer)}
-                            key={`${choice}-${index}`}>{choice[keys[0]].name}</li>
+                        if (Array.isArray(choice)) {
+                            return <li
+                                className={
+                                    ((questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === true)
+                                        ? "correct"
+                                        : (questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === false)
+                                            ? "wrong" : "") + " " + (questionare[currentQuestion - 1]?.correctChoice === index ? "correct" : "")}
+                                onClick={() => handleCheck(choice, index)}
+                                style={{ pointerEvents: questionare[currentQuestion - 1]?.selectedChoice[0] != null ? "none" : "" }}
+                                key={`${choice}-${index}`}>
+                                {choice[0]}
+                            </li>
 
-                    } else {
-                        return <li onClick={() => handleCheck(choice.common || choice.name, questionare[currentQuestion - 1].correctAnswer)}
-                            key={`${choice}-${index}`}> {choice.common || choice.name}</li >
+                        } else if (questionare[currentQuestion - 1].genre === "languages") {
+                            const keys = Object.keys(choice);
+                            return  <li
+                                className={
+                                    ((questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === true)
+                                        ? "correct"
+                                        : (questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === false)
+                                            ? "wrong" : "") + " " + (questionare[currentQuestion - 1]?.correctChoice === index ? "correct" : "")}
+                                onClick={() => handleCheck(choice, index)}
+                                style={{ pointerEvents: questionare[currentQuestion - 1]?.selectedChoice[0] != null ? "none" : "" }}
+                                key={`${choice}-${index}`}>{choice[keys[0]] || choice[keys[0]]?.name}</li>
+
+                        } else if (questionare[currentQuestion - 1].genre === "currencies") {
+                            const keys = Object.keys(choice);
+                            return <li
+
+                                className={
+                                    ((questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === true)
+                                        ? "correct"
+                                        : (questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === false)
+                                            ? "wrong" : "") + " " + (questionare[currentQuestion - 1]?.correctChoice === index ? "correct" : "")}
+                                onClick={() => handleCheck(choice, index)}
+                                style={{ pointerEvents: questionare[currentQuestion - 1]?.selectedChoice[0] != null ? "none" : "" }}
+                                key={`${choice}-${index}`}>{choice[keys[0]]?.name}</li>
+
+                        } else {
+                            return <li
+                                className={
+                                    ((questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === true)
+                                        ? "correct"
+                                        : (questionare[currentQuestion - 1]?.selectedChoice[0] === index && questionare[currentQuestion - 1]?.selectedChoice[1] === false)
+                                            ? "wrong" : "") + " " + (questionare[currentQuestion - 1]?.correctChoice === index ? "correct" : "")}
+                                onClick={() => handleCheck(choice, index)}
+                                style={{ pointerEvents: questionare[currentQuestion - 1]?.selectedChoice[0] != null ? "none" : "" }}
+                                key={`${choice}-${index}`}> {choice.common || choice.name}</li >
+
+                        }
+
 
                     }
 
+                    )}
+                </ul>
+                <div className='next'>
+                    <button className={isDisabled ? "disabled" : "enabled"} disabled={isDisabled} onClick={handleUpdateQuestion}>Next</button>
+                </div>
+            </div >)
+            : (
+                <Results results={results} />
+            )
 
-                }
-
-                )}
-            </ul>
-            <div className='next'>
-                <button onClick={handleUpdateQuestion}>Next</button>
-            </div>
-        </div >
     )
 }
 

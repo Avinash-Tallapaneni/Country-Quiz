@@ -37,7 +37,7 @@ li {
 
 li:hover {
     background-color: rgba(27, 25, 25, 0.178);
-
+    cursor: pointer;
 }
 
 .next {
@@ -51,14 +51,26 @@ li:hover {
     border-radius: 0.25rem;
     outline: none;
     border: none;
-    background-color: rgba(24, 132, 221, 0.178);
     cursor: pointer;
 }
 
+.disabled {
+    background-color: rgba(24, 132, 221, 0.178);
+}
+.enabled {
+    background-color: rgba(24, 221, 136, 0.537);
+}
+
+
 .correct {
-    background-color: rgba(24, 221, 60, 0.178);
+    background-color: rgba(15, 227, 54, 0.528);
 }
 
 .wrong {
-    background-color: rgba(221, 67, 24, 0.178);
+    background-color: rgba(242, 61, 11, 0.558);
+}
+
+li.correct,
+li.wrong {
+    pointer-events: none;
 }
